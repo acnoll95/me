@@ -1,0 +1,74 @@
+1.
+
+select c.CustomerName, count(distinct o.OrderID) OrderCount
+from customers c
+inner join orders o
+on c.CustomerID = o.CustomerID
+group by c.CustomerName
+order by count(distinct o.OrderID) desc
+
+2.
+
+Update c
+set c.City = 'New York'
+from Customers c
+inner join Orders o
+on c.CustomerID = o.CustomerID
+where c.City = 'London'
+
+3.
+
+select 
+datepart(year,o.OrderDate) year,
+datepart(month,o.OrderDate) month,
+sum(o.UnitsSold) UnitsSold
+from Orders o
+group by 
+datepart(year,o.OrderDate),
+datepart(month,o.OrderDate)
+order by 
+datepart(year,o.OrderDate),
+datepart(month,o.OrderDate)
+
+4.
+
+select top 5 c.CustomerName, sum(o.TotalAmount) TotalAmount
+from customers c
+inner join orders o
+on c.CustomerID = o.CustomerID
+group by c.CustomerName
+order by sum(o.TotalAmount) desc
+
+5.
+
+select top 3 c.CustomerName, sum(o.TotalAmount) TotalAmount
+from customers c
+inner join orders o
+on c.CustomerID = o.CustomerID
+where datediff(o.OrderDate, getdate())<=90
+group by c.CustomerName
+order by sum(o.TotalAmount) desc
+
+6.
+--ProductName is missing. I will assume a Product table that contains ProductID, ProductName
+with t1 as (
+Select o.ProductID, 
+p.ProductName,
+datepart(year,o.OrderDate) Year,
+datepart(month,o.OrderDate) Month,
+count(distinct o.OrderID) OrderCount
+from Orders o 
+inner join Products p
+on o.ProductID = p.ProductID
+group by o.ProductID, 
+p.ProductName,
+datepart(year,o.OrderDate),
+datepart(month,o.OrderDate))
+
+select ProductID, ProductName, Year, Month
+(OrderCount - lag(OrderCount) over prev) / (lag(OrderCount) over prev) as SalesGrowth
+from t1
+window prev as (Partition by ProductID Order by Year, Month)
+order by ProductId, Year, Month
+
+
